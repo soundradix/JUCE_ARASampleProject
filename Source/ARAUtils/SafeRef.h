@@ -34,7 +34,7 @@ public:
     class ScopedAccess
     {
     public:
-        ScopedAccess (SafeRef::Ptr& ref, bool tryLock = false)
+        ScopedAccess (Ptr& ref, bool tryLock = false)
             : ref_ (*ref)
         {
             if (tryLock)
