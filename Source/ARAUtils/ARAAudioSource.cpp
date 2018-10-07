@@ -1,3 +1,5 @@
+// Written and contributed by Sound Radix Ltd.
+
 #include "ARAAudioSource.h"
 
 class ARAAudioSource::Reader : public AudioFormatReader
@@ -12,8 +14,6 @@ public:
         int startOffsetInDestBuffer,
         int64 startSampleInFile,
         int numSamples) override;
-
-    void didUpdateProperties();
 
     std::unique_ptr<ARA::PlugIn::HostAudioReader> araHostReader;
 
@@ -35,9 +35,15 @@ ARAAudioSource::ARAAudioSource (ARA::PlugIn::Document* document, ARA::ARAAudioSo
 
 ARAAudioSource::~ARAAudioSource()
 {
+    invalidateReaders();
+}
+
+void ARAAudioSource::invalidateReaders()
+{
     ScopedWriteLock l (ref_->lock);
     for (auto& reader : readers_)
         reader->araHostReader.reset();
+    readers_.clear();
     ref_->reset();
 }
 
@@ -46,15 +52,33 @@ AudioFormatReader* ARAAudioSource::newReader()
     return new Reader (this);
 }
 
+void ARAAudioSource::willUpdateProperties()
+{
+   #if JUCE_DEBUG
+    jassert (!stateUpdateProperties);
+    stateUpdateProperties = true;
+   #endif
+
+    invalidateReaders();
+}
+
 void ARAAudioSource::didUpdateProperties()
 {
-    ScopedWriteLock l (ref_->lock);
-    for (auto& reader : readers_)
-        reader->didUpdateProperties();
+   #if JUCE_DEBUG
+    jassert (stateUpdateProperties);
+    stateUpdateProperties = false;
+   #endif
+
+    ref_ = new Ref (this);
 }
 
 void ARAAudioSource::willEnableSamplesAccess (bool enable)
 {
+   #if JUCE_DEBUG
+    jassert (!stateEnableSamplesAccess);
+    stateEnableSamplesAccess = true;
+   #endif
+
     ref_->lock.enterWrite();
     if (!enable)
         for (auto& reader : readers_)
@@ -63,6 +87,11 @@ void ARAAudioSource::willEnableSamplesAccess (bool enable)
 
 void ARAAudioSource::didEnableSamplesAccess (bool enable)
 {
+   #if JUCE_DEBUG
+    jassert (stateEnableSamplesAccess);
+    stateEnableSamplesAccess = false;
+   #endif
+
     if (enable)
         for (auto& reader : readers_)
             reader->araHostReader.reset (new ARA::PlugIn::HostAudioReader (this));
@@ -77,7 +106,10 @@ ARAAudioSource::Reader::Reader (ARAAudioSource* source)
         araHostReader.reset (new ARA::PlugIn::HostAudioReader (source));
     bitsPerSample = 32;
     usesFloatingPointData = true;
-    didUpdateProperties();
+    sampleRate = source->getSampleRate();
+    numChannels = source->getChannelCount();
+    lengthInSamples = source->getSampleCount();
+    tmpPtrs_.resize (numChannels);
     ScopedWriteLock l (ref_->lock);
     source->readers_.push_back (this);
 }
@@ -91,17 +123,6 @@ ARAAudioSource::Reader::~Reader()
     }
 }
 
-void ARAAudioSource::Reader::didUpdateProperties()
-{
-    Ref::ScopedAccess source (ref_);
-    if (! source)
-        return;
-    sampleRate = source->getSampleRate();
-    numChannels = source->getChannelCount();
-    lengthInSamples = source->getSampleCount();
-    tmpPtrs_.resize (numChannels);
-}
-
 bool ARAAudioSource::Reader::readSamples (
     int** destSamples,
     int numDestChannels,
@@ -110,7 +131,7 @@ bool ARAAudioSource::Reader::readSamples (
     int numSamples)
 {
     Ref::ScopedAccess source (ref_, true);
-    if (!araHostReader)
+    if (!source || !araHostReader)
         return false;
     for (int chan_i = 0; chan_i < tmpPtrs_.size(); ++chan_i)
         if (chan_i < numDestChannels && destSamples[chan_i] != nullptr)

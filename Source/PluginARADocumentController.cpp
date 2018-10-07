@@ -44,10 +44,16 @@ void ArasampleProjectDocumentController::didEnableAudioSourceSamplesAccess (ARA:
     source->didEnableSamplesAccess (enable);
 }
 
-void ArasampleProjectDocumentController::didUpdateAudioSourceProperties (ARA::PlugIn::AudioSource *audioSource)
+void ArasampleProjectDocumentController::willUpdateAudioSourceProperties (
+    ARA::PlugIn::AudioSource* audioSource,
+    ARA::PlugIn::PropertiesPtr<ARA::ARAAudioSourceProperties>)
 {
-    auto source = static_cast<ARAAudioSource*> (audioSource);
-    source->didUpdateProperties();
+    static_cast<ARAAudioSource*> (audioSource)->willUpdateProperties();
+}
+
+void ArasampleProjectDocumentController::didUpdateAudioSourceProperties (ARA::PlugIn::AudioSource* audioSource)
+{
+    static_cast<ARAAudioSource*> (audioSource)->didUpdateProperties();
 }
 
 void ArasampleProjectDocumentController::willUpdatePlaybackRegionProperties (ARA::PlugIn::PlaybackRegion* playbackRegion, ARA::PlugIn::PropertiesPtr<ARA::ARAPlaybackRegionProperties> newProperties)

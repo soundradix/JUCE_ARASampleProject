@@ -1,3 +1,5 @@
+// Written and contributed by Sound Radix Ltd.
+
 #pragma once
 
 // This module provides a weak-reference mechanism,
@@ -34,7 +36,7 @@ public:
     class ScopedAccess
     {
     public:
-        ScopedAccess (Ptr& ref, bool tryLock = false)
+        ScopedAccess (const Ptr& ref, bool tryLock = false)
             : ref_ (*ref)
         {
             if (tryLock)

@@ -1,3 +1,5 @@
+// Written and contributed by Sound Radix Ltd.
+
 #pragma once
 
 #include "ARA_Library/PlugIn/ARAPlug.h"
@@ -22,6 +24,9 @@ public:
 
     AudioFormatReader* newReader();
 
+    // Needs to be called in the document controller's `willUpdateAudioSourceProperties` method.
+    void willUpdateProperties();
+
     // Needs to be called in the document controller's `didUpdateAudioSourceProperties` method.
     void didUpdateProperties();
 
@@ -32,9 +37,17 @@ public:
     void didEnableSamplesAccess (bool enable);
 
 private:
+    void invalidateReaders();
+
     class Reader;
     typedef SafeRef<ARAAudioSource> Ref;
 
     Ref::Ptr ref_;
+
+    // Active readers.
     std::vector<Reader*> readers_;
+
+   #if JUCE_DEBUG
+    bool stateUpdateProperties = false, stateEnableSamplesAccess = false;
+   #endif
 };
