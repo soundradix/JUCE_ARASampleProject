@@ -8,7 +8,7 @@ void AudioView::paint (Graphics& g)
     g.setColour (trackColour.contrasting (0.7f));
     if (_audioThumb.getTotalLength())
     {
-        _audioThumb.drawChannels (g, getLocalBounds(), 0, _audioThumb.getTotalLength(), 1.0);
+        _audioThumb.drawChannels (g, getLocalBounds(), _startInSecs, _audioThumb.getTotalLength(), 1.0);
     }
     g.setColour (trackColour.contrasting (1.0f));
     g.setFont (Font (12.0));
@@ -30,9 +30,10 @@ AudioView::AudioView (ARA::PlugIn::RegionSequence& sequence)
     name = String (sequence.getName());
     order = String (sequence.getOrderIndex());
     _audioThumb.setReader ((dynamic_cast<ARARegionSequence&>(sequence)).newReader(), 1);
+    _startInSecs = _audioThumb.getTotalLength();
     for (auto region : sequence.getPlaybackRegions())
     {
-        _startInSecs = std::min (_audioThumb.getTotalLength(), region->getStartInPlaybackTime());
+        _startInSecs = std::min (_startInSecs, region->getStartInPlaybackTime());
     }
     _audioThumb.addChangeListener (this);
 
@@ -60,7 +61,7 @@ double AudioView::getStartInSecs()
 
 double AudioView::getLengthInSecs()
 {
-    return _audioThumb.getTotalLength();
+    return _audioThumb.getTotalLength() - _startInSecs;
 }
 
 void AudioView::isSelected(bool value)
