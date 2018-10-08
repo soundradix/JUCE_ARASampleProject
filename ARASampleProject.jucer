@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="v5FTSA" name="ARASampleProject" projectType="audioplug" jucerVersion="5.3.2"
               pluginCode="AraT" pluginVST3Category="Analyzer" pluginVSTCategory="kPlugCategAnalysis"
-              pluginFormats="buildStandalone,buildVST3,enableARA">
+              pluginFormats="buildAU,buildStandalone,buildVST3,enableARA">
   <MAINGROUP id="aCHzDP" name="ARASampleProject">
     <GROUP id="{38BAE513-FAF5-0AD7-A598-7A51E0C50CB5}" name="Source">
       <GROUP id="{CB60AE0D-FA81-E4B5-D21D-961C16DAF198}" name="ARAUtils">
