@@ -1,3 +1,7 @@
+Project archived, not maintained!
+
+This has been integrated into mainline ARA development and later into mainline JUCE - [ARAPluginDemo](https://github.com/soundradix/JUCE/blob/main/examples/Plugins/ARAPluginDemo.h)
+
 ARASampleProject
 ================
 
